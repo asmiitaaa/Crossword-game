@@ -19,18 +19,19 @@ def build_length_index(words):
     return index
 
 
-#position-letter index: for every (length, position, letter), store the SET of words
+#position-letter index-----for every (length, position, letter), store the SET of words
 #that have that letter at that position. lets matches() intersect sets instead of scanning.
 def build_position_index(words):
     index = {}
     for word in words:
         L = len(word)
-        for pos, letter in enumerate(word):
+        for pos, letter in enumerate(word):#enumerate tracks the position and letter in the word simulataneously
             key = (L, pos, letter)
             if key not in index:
                 index[key] = set()
             index[key].add(word)
     return index
+#so all the words with a certain length that has the letter letter in the pos position
 
 
 #also keep words grouped by length, as a set, for patterns that are all wildcards
@@ -42,6 +43,7 @@ def build_length_sets(words):
             index[L] = set()
         index[L].add(word)
     return index
+# we need the set apart from the index so that we can apply the intersection operation 
 
 
 length_index = build_length_index(words)
@@ -49,26 +51,28 @@ position_index = build_position_index(words)
 length_sets = build_length_sets(words)
 
 
-#matches now intersects precomputed sets for each FIXED letter in the pattern,
+#matches now intersects the pattern and the words of that length/matching positions 
 #instead of scanning every word of that length character-by-character
 def matches(pattern):
     L = len(pattern)
-    #collect the fixed (non-wildcard) positions
+    
+    #collects the fixed positions, the ones which have letters filled in already 
     fixed = [(i, pattern[i]) for i in range(L) if pattern[i] != '_']
+    #gets the index and the corresponding letter in the pattern 
 
-    #if the pattern is all wildcards, every word of this length qualifies
+    #if the pattern doesnt even have a single cell filled in, all the available wrods of this length qualify
     if not fixed:
         return list(length_sets.get(L, set()))
 
-    #start with the set for the first fixed letter, then intersect the rest
+    
     result = None
     for (i, letter) in fixed:
         s = position_index.get((L, i, letter), set())
         if result is None:
             result = s
         else:
-            result = result & s          #set intersection
-        if not result:                   #empty already -> no matches, stop early
+            result = result & s          #intersects with all the words that have word i in position i  
+        if not result:                   #no matches for that word with those blanks 
             return []
     return list(result)
 
@@ -207,7 +211,7 @@ def get_pattern(grid, slot):
     return pattern
 
 
-#counts how many placed words use each cell (1 or 2), so backtracking only clears a cell when no word needs it
+#counts how many words are there in that corresponding cell ( that can be 1 or 2), so that we backtrack according to the frequency  
 def make_count_grid(n):
     return [[0 for _ in range(n)] for _ in range(n)]
 
@@ -270,6 +274,28 @@ def fill(grid, counts, slots, used, start_time, limit):
 #turns a grid into a hashable string so we can detect duplicate patterns
 def grid_to_key(grid):
     return "".join("".join(row) for row in grid)
+
+
+#to make the filled grid using the functions given above 
+def make_filled_grid(n, target_blocks, time_limit=5, max_attempts=40):
+    seen = set()
+    for _ in range(max_attempts):
+        grid = make_empty_grid(n)
+        if not generate(grid, 0, target_blocks):
+            continue
+        key = grid_to_key(grid)
+        if key in seen:
+            continue
+        seen.add(key)
+        slots = extract_slots(grid)
+        counts = make_count_grid(n)
+        used = set()
+        if fill(grid, counts, slots, used, time.time(), time_limit) is True:
+            return grid, slots
+    return None, None
+
+
+
 #tester
 N = 10
 TARGET_BLOCKS = 24
@@ -277,53 +303,55 @@ TIME_LIMIT = 5
 MAX_ATTEMPTS = 40
 
 solved = False
-seen_grids = set()            #grid patterns we've already tried
-consecutive_dupes = 0         #how many times in a row we've generated a repeat
-DUPE_LIMIT = 200              #if we can't find a NEW grid after this many tries, give up
+seen_grids = set()  #grid patterns we've already tried
+consecutive_dupes = 0       #how many times in a row we've generated a repeat
+DUPE_LIMIT = 200 #if we can't find a NEW grid after this many tries, give up
 
-for attempt in range(MAX_ATTEMPTS):
-    #try to generate a NEW (unseen) grid; give up if we keep getting duplicates
-    grid = None
-    while consecutive_dupes < DUPE_LIMIT:
-        candidate = make_empty_grid(N)
-        if not generate(candidate, 0, TARGET_BLOCKS):
-            continue
-        key = grid_to_key(candidate)
-        if key in seen_grids:
-            consecutive_dupes += 1        #generated a repeat
-            continue
-        #found a fresh grid
-        seen_grids.add(key)
-        consecutive_dupes = 0
-        grid = candidate
-        break
 
-    #if we couldn't find any new grid, stop entirely
-    if grid is None:
-        print(f"Ran out of new grids to try after {attempt} attempts.")
-        break
+if __name__ == "__main__":
+    for attempt in range(MAX_ATTEMPTS):
+        #try to generate a NEW (unseen) grid; give up if we keep getting duplicates
+        grid = None
+        while consecutive_dupes < DUPE_LIMIT:
+            candidate = make_empty_grid(N)
+            if not generate(candidate, 0, TARGET_BLOCKS):
+                continue
+            key = grid_to_key(candidate)
+            if key in seen_grids:
+                consecutive_dupes += 1        #generated a repeat
+                continue
+            #found a fresh grid
+            seen_grids.add(key)
+            consecutive_dupes = 0
+            grid = candidate
+            break
 
-    slots = extract_slots(grid)
-    counts = make_count_grid(N)
-    used = set()
-    t0 = time.time()
-    result = fill(grid, counts, slots, used, time.time(), TIME_LIMIT)
-    print(f"attempt {attempt+1}: {time.time()-t0:.1f}s, result={result}", flush=True)
+        #if we couldn't find any new grid, stop entirely
+        if grid is None:
+            print(f"Ran out of new grids to try after {attempt} attempts.")
+            break
 
-    #print the grid every time (solved or not), as requested
-    print_grid(grid)
+        slots = extract_slots(grid)
+        counts = make_count_grid(N)
+        used = set()
+        t0 = time.time()
+        result = fill(grid, counts, slots, used, time.time(), TIME_LIMIT)
+        print(f"attempt {attempt+1}: {time.time()-t0:.1f}s, result={result}", flush=True)
 
-    if result is True:
-        print(f"Solved on attempt {attempt+1} — {N}x{N} grid, {len(slots)} words:")
-        for slot in slots:
-            w = get_pattern(grid, slot)
-            if w not in words_set:
-                print("INVALID WORD:", w, slot["direction"])
-        solved = True
-        break
+        #print the grid every time (solved or not), as requested
+        print_grid(grid)
 
-if not solved:
-    print(f"Could not fill any grid.")
+        if result is True:
+            print(f"Solved on attempt {attempt+1} — {N}x{N} grid, {len(slots)} words:")
+            for slot in slots:
+                w = get_pattern(grid, slot)
+                if w not in words_set:
+                    print("INVALID WORD:", w, slot["direction"])
+            solved = True
+            break
+
+    if not solved:
+        print(f"Could not fill any grid.")
 # import random
 # import time
 # from index_generator import build_length_index, matches, words
