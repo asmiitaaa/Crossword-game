@@ -1,22 +1,15 @@
 import random
 import time
 
-with open("2of12.txt") as f:
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+
+with open(BASE_DIR / "2of12.txt", "r") as f:
     words = [line.strip().upper() for line in f if len(line.strip()) >= 3]
 #words- has all the words in our wordlist
 
 words_set = set(words)   #set for O(1) validity lookups
-
-
-#the index stores all the words by the length of the word
-def build_length_index(words):
-    index = {}
-    for word in words:
-        length = len(word)
-        if length not in index:
-            index[length] = []
-        index[length].append(word)
-    return index
 
 
 #position-letter index-----for every (length, position, letter), store the SET of words
@@ -45,8 +38,6 @@ def build_length_sets(words):
     return index
 # we need the set apart from the index so that we can apply the intersection operation 
 
-
-length_index = build_length_index(words)
 position_index = build_position_index(words)
 length_sets = build_length_sets(words)
 

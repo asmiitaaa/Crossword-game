@@ -2,10 +2,9 @@ import os
 from dotenv import load_dotenv
 from groq import Groq
 
-# Load the .env file so the API key becomes available
+#loading the environment variables 
 load_dotenv()
 
-# Create the Groq client, authenticated with your key (read from .env)
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 def generate_clue(word, style="plain"):
     # build the instruction based on style
@@ -36,7 +35,7 @@ def generate_clue(word, style="plain"):
         ],
     )
     return response.choices[0].message.content
-print(generate_clue("OCEAN", "plain"))
-print(generate_clue("PIANO", "popculture"))
-print(generate_clue("SHELL", "synonym"))
-print(generate_clue("LIGHT", "quote"))
+# print(generate_clue("OCEAN", "plain"))
+# print(generate_clue("PIANO", "popculture"))
+# print(generate_clue("SHELL", "synonym"))
+# print(generate_clue("LIGHT", "quote"))

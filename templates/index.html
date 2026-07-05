@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WORDJAM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=VT323&family=Nunito:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <!-- ============ SCREEN 1: LANDING ============ -->
+    <section id="landing" class="screen active">
+      <div class="bubbles" id="landing-bubbles"></div>
+      <div class="landing-inner">
+        <div class="mascot" aria-hidden="true">&#128025;</div>
+        <h1 class="title">
+          <span class="word">WORD</span><span class="jam">JAM</span>
+        </h1>
+        <div class="subtitle">CHOOSE YOUR DEPTH</div>
+
+        <div class="tiers">
+          <button class="tier" data-tier="bitsize">
+            <div class="tier-mini mini-5"></div>
+            <div class="tier-name c-green">BITSIZE</div>
+            <div class="tier-sub">5 &times; 5 &middot; shallows</div>
+          </button>
+          <button class="tier" data-tier="mega">
+            <div class="tier-mini mini-7"></div>
+            <div class="tier-name c-cyan">MEGA</div>
+            <div class="tier-sub">7 &times; 7 &middot; reef</div>
+          </button>
+          <button class="tier" data-tier="giga">
+            <div class="tier-mini mini-10"></div>
+            <div class="tier-name c-coral">GIGA</div>
+            <div class="tier-sub">10 &times; 10 &middot; abyss</div>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SCREEN 2: LOADING ============ -->
+    <section id="loading" class="screen">
+      <div class="bubbles" id="loading-bubbles"></div>
+      <div class="loading-inner">
+        <div class="diver" aria-hidden="true">&#128033;</div>
+        <div class="loading-title">
+          GENERATING PUZZLE<span class="ld-dot"></span
+          ><span class="ld-dot"></span><span class="ld-dot"></span>
+        </div>
+        <div class="loading-bar-wrap">
+          <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+          <div class="loading-steps">
+            <span id="step-grid">&#9633; GRID</span>
+            <span id="step-clues">&#9633; CLUES</span>
+            <span id="step-ready">&#9633; READY</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SCREEN 3: GAME ============ -->
+    <section id="game" class="screen">
+      <header class="game-header">
+        <h1 class="title small">
+          <span class="word">WORD</span><span class="jam">JAM</span>
+        </h1>
+        <div class="stats">
+          <span><b class="c-green" id="stat-pct">0%</b> DONE</span>
+          <span><b class="c-yellow" id="stat-words">0/0</b> WORDS</span>
+        </div>
+      </header>
+
+      <div class="game-body">
+        <div class="grid-area">
+          <div id="grid" class="grid"></div>
+          <div id="fx" class="fx"></div>
+        </div>
+
+        <div class="clue-area">
+          <div class="clue-group">
+            <div class="clue-head c-cyan">ACROSS &rarr;</div>
+            <div id="clues-across"></div>
+          </div>
+          <div class="clue-group">
+            <div class="clue-head c-coral">DOWN &darr;</div>
+            <div id="clues-down"></div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="game-footer">
+        <button class="pc-btn btn-yellow" id="btn-hint">
+          <span class="i">&#9788;</span> Hint
+        </button>
+        <button class="pc-btn btn-coral" id="btn-clear">
+          <span class="i">&times;</span> Clear
+        </button>
+        <button class="pc-btn btn-green" id="btn-new">
+          <span class="i">&#8635;</span> New
+        </button>
+      </footer>
+    </section>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
+</html>
