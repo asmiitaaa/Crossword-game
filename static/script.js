@@ -282,6 +282,16 @@ function selectSlot(idx, moveCellToStart) {
     state.activeCell = firstEmptyCell(slot) || slot.cells[0].slice();
   }
   refreshHighlights();
+  focusMobileInput();
+}
+
+// focus the hidden input so the mobile on-screen keyboard appears
+function focusMobileInput() {
+  const inp = document.getElementById("hidden-input");
+  if (inp) {
+    inp.value = "";
+    inp.focus({ preventScroll: true });
+  }
 }
 
 function cellInSlot(cell, slot) {
@@ -820,8 +830,33 @@ function init() {
       showScreen("landing");
     });
 
-  // keyboard typing
+  // keyboard typing (physical keyboards)
   document.addEventListener("keydown", onKey);
+
+  // mobile on-screen keyboard: handle input + backspace via the hidden field
+  const inp = document.getElementById("hidden-input");
+  if (inp) {
+    inp.addEventListener("input", (e) => {
+      const val = e.target.value;
+      const ch = val.slice(-1); // last typed character
+      e.target.value = "";
+      if (
+        /^[a-zA-Z]$/.test(ch) &&
+        state.activeSlot !== null &&
+        state.activeCell
+      ) {
+        setLetter(state.activeCell[0], state.activeCell[1], ch.toUpperCase());
+        advance(1);
+        checkSlotComplete();
+      }
+    });
+    // backspace on mobile fires keydown on the input
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Backspace") {
+        onKey(e);
+      }
+    });
+  }
 
   showScreen("landing");
 }

@@ -738,6 +738,21 @@ body {
   }
 }
 
+/* hidden input that triggers the mobile keyboard (kept focusable, not display:none) */
+#hidden-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+  left: 50%;
+  top: 50%;
+  border: none;
+  background: transparent;
+  color: transparent;
+  font-size: 16px; /* 16px stops iOS from zooming on focus */
+}
+
 /* ============ responsive ============ */
 @media (max-width: 640px) {
   .title {

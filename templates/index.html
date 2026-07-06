@@ -1,121 +1,168 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WORDJAM</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
-    <link rel="apple-touch-icon" href="{{ url_for('static', filename='favicon.png') }}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-
-<!-- ============ SCREEN 1: LANDING ============ -->
-<section id="landing" class="screen active">
-    <div class="bubbles" id="landing-bubbles"></div>
-    <div class="landing-inner">
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='favicon.png') }}"
+    />
+    <link
+      rel="apple-touch-icon"
+      href="{{ url_for('static', filename='favicon.png') }}"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=VT323&family=Nunito:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <!-- ============ SCREEN 1: LANDING ============ -->
+    <section id="landing" class="screen active">
+      <div class="bubbles" id="landing-bubbles"></div>
+      <div class="landing-inner">
         <div class="mascot" aria-hidden="true">&#128025;</div>
-        <h1 class="title"><span class="word">WORD</span><span class="jam">JAM</span></h1>
+        <h1 class="title">
+          <span class="word">WORD</span><span class="jam">JAM</span>
+        </h1>
         <div class="subtitle">CHOOSE YOUR DEPTH</div>
 
         <div class="tiers">
-            <button class="tier" data-tier="bitsize">
-                <div class="tier-mini mini-5"></div>
-                <div class="tier-name c-green">BITSIZE</div>
-                <div class="tier-sub">5 &times; 5 &middot; shallows</div>
-            </button>
-            <button class="tier" data-tier="mega">
-                <div class="tier-mini mini-7"></div>
-                <div class="tier-name c-cyan">MEGA</div>
-                <div class="tier-sub">7 &times; 7 &middot; reef</div>
-            </button>
-            <button class="tier" data-tier="giga">
-                <div class="tier-mini mini-10"></div>
-                <div class="tier-name c-coral">GIGA</div>
-                <div class="tier-sub">10 &times; 10 &middot; abyss</div>
-            </button>
+          <button class="tier" data-tier="bitsize">
+            <div class="tier-mini mini-5"></div>
+            <div class="tier-name c-green">BITSIZE</div>
+            <div class="tier-sub">5 &times; 5 &middot; shallows</div>
+          </button>
+          <button class="tier" data-tier="mega">
+            <div class="tier-mini mini-7"></div>
+            <div class="tier-name c-cyan">MEGA</div>
+            <div class="tier-sub">7 &times; 7 &middot; reef</div>
+          </button>
+          <button class="tier" data-tier="giga">
+            <div class="tier-mini mini-10"></div>
+            <div class="tier-name c-coral">GIGA</div>
+            <div class="tier-sub">10 &times; 10 &middot; abyss</div>
+          </button>
         </div>
-    </div>
-</section>
+      </div>
+    </section>
 
-<!-- ============ SCREEN 2: LOADING ============ -->
-<section id="loading" class="screen">
-    <div class="bubbles" id="loading-bubbles"></div>
-    <div class="loading-inner">
+    <!-- ============ SCREEN 2: LOADING ============ -->
+    <section id="loading" class="screen">
+      <div class="bubbles" id="loading-bubbles"></div>
+      <div class="loading-inner">
         <div class="diver" aria-hidden="true">&#128033;</div>
-        <div class="loading-title">GENERATING PUZZLE<span class="ld-dot"></span><span class="ld-dot"></span><span class="ld-dot"></span></div>
+        <div class="loading-title">
+          GENERATING PUZZLE<span class="ld-dot"></span
+          ><span class="ld-dot"></span><span class="ld-dot"></span>
+        </div>
         <div class="loading-bar-wrap">
-            <div class="loading-bar"><div class="loading-bar-fill"></div></div>
-            <div class="loading-steps">
-                <span id="step-grid">&#9633; GRID</span>
-                <span id="step-clues">&#9633; CLUES</span>
-                <span id="step-ready">&#9633; READY</span>
-            </div>
+          <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+          <div class="loading-steps">
+            <span id="step-grid">&#9633; GRID</span>
+            <span id="step-clues">&#9633; CLUES</span>
+            <span id="step-ready">&#9633; READY</span>
+          </div>
         </div>
-    </div>
-</section>
+      </div>
+    </section>
 
-<!-- ============ SCREEN 3: GAME ============ -->
-<section id="game" class="screen">
-    <header class="game-header">
-        <h1 class="title small"><span class="word">WORD</span><span class="jam">JAM</span></h1>
+    <!-- ============ SCREEN 3: GAME ============ -->
+    <section id="game" class="screen">
+      <header class="game-header">
+        <h1 class="title small">
+          <span class="word">WORD</span><span class="jam">JAM</span>
+        </h1>
         <div class="stats">
-            <span><b class="c-green" id="stat-pct">0%</b> DONE</span>
-            <span><b class="c-yellow" id="stat-words">0/0</b> WORDS</span>
-            <span><b class="c-cyan" id="stat-time">00:00</b> TIME</span>
+          <span><b class="c-green" id="stat-pct">0%</b> DONE</span>
+          <span><b class="c-yellow" id="stat-words">0/0</b> WORDS</span>
+          <span><b class="c-cyan" id="stat-time">00:00</b> TIME</span>
         </div>
-    </header>
+      </header>
 
-    <div class="game-body">
+      <div class="game-body">
         <div class="grid-area">
-            <div id="grid" class="grid"></div>
-            <div id="fx" class="fx"></div>
+          <div id="grid" class="grid"></div>
+          <div id="fx" class="fx"></div>
+          <input
+            id="hidden-input"
+            type="text"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            aria-hidden="true"
+            tabindex="-1"
+          />
         </div>
 
         <div class="clue-area">
-            <div class="clue-group">
-                <div class="clue-head c-cyan">ACROSS &rarr;</div>
-                <div id="clues-across"></div>
-            </div>
-            <div class="clue-group">
-                <div class="clue-head c-coral">DOWN &darr;</div>
-                <div id="clues-down"></div>
-            </div>
+          <div class="clue-group">
+            <div class="clue-head c-cyan">ACROSS &rarr;</div>
+            <div id="clues-across"></div>
+          </div>
+          <div class="clue-group">
+            <div class="clue-head c-coral">DOWN &darr;</div>
+            <div id="clues-down"></div>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <footer class="game-footer">
-        <button class="pc-btn btn-yellow" id="btn-hint"><span class="i">&#9788;</span> Hint</button>
-        <button class="pc-btn btn-coral" id="btn-clear"><span class="i">&times;</span> Clear</button>
-        <button class="pc-btn btn-green" id="btn-new"><span class="i">&#8635;</span> New</button>
-    </footer>
-</section>
+      <footer class="game-footer">
+        <button class="pc-btn btn-yellow" id="btn-hint">
+          <span class="i">&#9788;</span> Hint
+        </button>
+        <button class="pc-btn btn-coral" id="btn-clear">
+          <span class="i">&times;</span> Clear
+        </button>
+        <button class="pc-btn btn-green" id="btn-new">
+          <span class="i">&#8635;</span> New
+        </button>
+      </footer>
+    </section>
 
-<!-- ============ SCREEN 4: WIN ============ -->
-<section id="win" class="screen">
-    <div class="confetti" id="win-confetti"></div>
-    <div class="win-inner">
+    <!-- ============ SCREEN 4: WIN ============ -->
+    <section id="win" class="screen">
+      <div class="confetti" id="win-confetti"></div>
+      <div class="win-inner">
         <div class="mascot" aria-hidden="true">&#128025;</div>
         <h1 class="win-title">SOLVED!</h1>
         <div class="win-sub" id="win-sub">You cleared the puzzle</div>
 
         <div class="win-stats">
-            <div class="win-stat"><b class="c-green" id="win-words">0</b><span>WORDS</span></div>
-            <div class="win-stat"><b class="c-yellow" id="win-time">00:00</b><span>TIME</span></div>
-            <div class="win-stat"><b class="c-coral" id="win-hints">0</b><span>HINTS</span></div>
+          <div class="win-stat">
+            <b class="c-green" id="win-words">0</b><span>WORDS</span>
+          </div>
+          <div class="win-stat">
+            <b class="c-yellow" id="win-time">00:00</b><span>TIME</span>
+          </div>
+          <div class="win-stat">
+            <b class="c-coral" id="win-hints">0</b><span>HINTS</span>
+          </div>
         </div>
 
         <div class="win-buttons">
-            <button class="pc-btn btn-green" id="btn-again"><span class="i">&#8635;</span> Play again</button>
-            <button class="pc-btn btn-cyan" id="btn-next"><span class="i">&#8599;</span> Next depth</button>
-            <button class="pc-btn btn-muted" id="btn-home"><span class="i">&#8962;</span> Home</button>
+          <button class="pc-btn btn-green" id="btn-again">
+            <span class="i">&#8635;</span> Play again
+          </button>
+          <button class="pc-btn btn-cyan" id="btn-next">
+            <span class="i">&#8599;</span> Next depth
+          </button>
+          <button class="pc-btn btn-muted" id="btn-home">
+            <span class="i">&#8962;</span> Home
+          </button>
         </div>
-    </div>
-</section>
+      </div>
+    </section>
 
-<script src="{{ url_for('static', filename='script.js') }}"></script>
-</body>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
 </html>
