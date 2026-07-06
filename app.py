@@ -75,6 +75,13 @@ def guess():
         "correct": (g == answer)
     })
 
+@app.route("/hint")
+def hint():
+    idx = int(request.args.get("clue_index"))
+    answer = game["answers"][idx]
+    import random as _r
+    pos = _r.randrange(len(answer))
+    return jsonify({"pos": pos, "letter": answer[pos]})
 
 if __name__ == "__main__":
     app.run(debug=True)

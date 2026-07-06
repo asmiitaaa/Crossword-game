@@ -15,6 +15,9 @@ let state = {
   activeSlot: null, // index into state.slots
   activeCell: null, // [r,c] of the current cell
   dir: "across", // current typing direction
+  hintsUsed: 0,
+  startTime: null,
+  timerInterval: null,
 };
 
 // ---------- screen switching ----------
@@ -81,6 +84,10 @@ async function startGame(tier) {
     state.slots = data.slots;
     state.clues = data.clues;
     state.solved = new Set();
+    state.entries = {};
+    state.hintsUsed = 0;
+    state.activeSlot = null;
+    state.activeCell = null;
 
     markLoadingStep("step-clues", "done");
     markLoadingStep("step-ready", "done");
@@ -89,6 +96,7 @@ async function startGame(tier) {
     await new Promise((r) => setTimeout(r, 500));
 
     showScreen("game");
+    startTimer();
     // Phase 2 will render the grid + clues here:
     if (typeof renderGame === "function") renderGame();
   } catch (err) {
@@ -378,11 +386,11 @@ function advance(step) {
   refreshHighlights();
 }
 
-// when the active word has all letters filled, we'll check it (Phase 4)
+// when the active word has all letters filled, check it against the backend
 function checkSlotComplete() {
   const slot = state.slots[state.activeSlot];
   const filled = slot.cells.every(([r, c]) => state.entries[r + "," + c]);
-  if (filled && typeof submitGuess === "function") {
+  if (filled) {
     submitGuess(state.activeSlot);
   }
 }
@@ -472,6 +480,15 @@ function playFeedback(feedback, correct) {
 
 function feedbackStyle(feedback, correct) {
   const f = (feedback || "").toLowerCase();
+  if (f === "hint") {
+    return {
+      label: "Hint",
+      bg: "#00e7ff",
+      fg: "#062028",
+      pillAnim: "pulsePill .9s ease-out",
+      particles: (fx) => sparks(fx, ["#00e7ff", "#5ad4ff"]),
+    };
+  }
   if (correct || f === "correct!") {
     return {
       label: "Correct!",
@@ -597,21 +614,63 @@ function snow(fx, count) {
   }
 }
 
+// ---- timer ----
+function startTimer() {
+  state.startTime = Date.now();
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(updateTimer, 1000);
+  updateTimer();
+}
+function stopTimer() {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.timerInterval = null;
+}
+function formatTime(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
+}
+function updateTimer() {
+  const el = document.getElementById("stat-time");
+  if (el && state.startTime)
+    el.textContent = formatTime(Date.now() - state.startTime);
+}
+
+// ---- win screen ----
 function playWin() {
-  const fx = document.getElementById("fx");
-  fx.innerHTML = "";
-  const pill = document.createElement("div");
-  pill.className = "fx-pill";
-  pill.textContent = "Solved!";
-  pill.style.background = "#2bff9a";
-  pill.style.color = "#062028";
-  pill.style.animation = "burstPill 1.4s ease-out";
-  fx.appendChild(pill);
-  confetti(fx);
-  confetti(fx);
-  setTimeout(() => {
-    fx.innerHTML = "";
-  }, 2500);
+  stopTimer();
+  const elapsed = state.startTime ? Date.now() - state.startTime : 0;
+
+  // fill in the win stats
+  document.getElementById("win-words").textContent = state.slots.length;
+  document.getElementById("win-time").textContent = formatTime(elapsed);
+  document.getElementById("win-hints").textContent = state.hintsUsed;
+  const tierName =
+    { bitsize: "Bitsize shallows", mega: "Mega reef", giga: "Giga abyss" }[
+      state.tier
+    ] || "puzzle";
+  document.getElementById("win-sub").textContent =
+    "You cleared the " + tierName;
+
+  makeConfetti();
+  showScreen("win");
+}
+
+function makeConfetti() {
+  const c = document.getElementById("win-confetti");
+  if (!c) return;
+  c.innerHTML = "";
+  const colors = ["#2bff9a", "#00e7ff", "#ffd84d", "#ff4d7d", "#5ad4ff"];
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement("span");
+    s.style.left = Math.random() * 100 + "%";
+    s.style.setProperty("--dx", Math.random() * 60 - 30 + "px");
+    s.style.background = colors[i % colors.length];
+    s.style.animationDuration = 2.2 + Math.random() * 1.5 + "s";
+    s.style.animationDelay = Math.random() * 1.5 + "s";
+    c.appendChild(s);
+  }
 }
 
 // ---- Clear: wipe the active word ----
@@ -624,18 +683,92 @@ function clearActiveWord() {
   refreshHighlights();
 }
 
-// ---- Hint: reveal one letter of the active word (asks the backend) ----
+// ---- Hint: reveal the first empty letter of the active word ----
 async function useHint() {
   if (state.activeSlot === null) return;
+  const slot = state.slots[state.activeSlot];
+  if (state.solved.has(state.activeSlot)) return;
+
+  // find the first empty cell's position within the word
+  let pos = -1;
+  for (let i = 0; i < slot.cells.length; i++) {
+    const [r, c] = slot.cells[i];
+    if (!state.entries[r + "," + c]) {
+      pos = i;
+      break;
+    }
+  }
+  if (pos === -1) return; // word already full
+
   try {
-    const res = await fetch(`/hint?clue_index=${state.activeSlot}`);
+    const res = await fetch(`/hint?clue_index=${state.activeSlot}&pos=${pos}`);
     const data = await res.json();
-    if (data.pos != null && data.letter) {
-      const slot = state.slots[state.activeSlot];
-      const [r, c] = slot.cells[data.pos];
+    if (data.letter) {
+      const [r, c] = slot.cells[pos];
       setLetter(r, c, data.letter);
-      playFeedback("hint", false);
-      checkSlotComplete();
+      state.hintsUsed++;
+      playHintFx(); // dedicated cyan hint effect — never warmth
+      advanceToNextEmpty();
+      silentCheckIfComplete();
+    }
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+// dedicated hint animation — a cyan shimmer, completely separate from warmth feedback
+function playHintFx() {
+  const fx = document.getElementById("fx");
+  if (!fx) return;
+  fx.innerHTML = "";
+  const pill = document.createElement("div");
+  pill.className = "fx-pill";
+  pill.textContent = "Hint";
+  pill.style.background = "#00e7ff";
+  pill.style.color = "#062028";
+  pill.style.animation = "pulsePill .9s ease-out";
+  fx.appendChild(pill);
+  sparks(fx, ["#00e7ff", "#5ad4ff"]);
+  setTimeout(() => {
+    fx.innerHTML = "";
+  }, 1000);
+}
+
+// move the cursor to the next empty cell in the active word (after a hint)
+function advanceToNextEmpty() {
+  const slot = state.slots[state.activeSlot];
+  for (const [r, c] of slot.cells) {
+    if (!state.entries[r + "," + c]) {
+      state.activeCell = [r, c];
+      refreshHighlights();
+      return;
+    }
+  }
+}
+
+// if the active word is now full, check it WITHOUT showing a warmth animation
+async function silentCheckIfComplete() {
+  const idx = state.activeSlot;
+  const slot = state.slots[idx];
+  const filled = slot.cells.every(([r, c]) => state.entries[r + "," + c]);
+  if (!filled || state.solved.has(idx)) return;
+
+  const guess = slot.cells
+    .map(([r, c]) => state.entries[r + "," + c] || "")
+    .join("");
+  try {
+    const res = await fetch("/guess", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clue_index: idx, guess }),
+    });
+    const data = await res.json();
+    if (data.correct) {
+      markSolved(idx);
+      updateStats();
+      if (state.solved.size === state.slots.length) {
+        setTimeout(() => playWin(), 700);
+      }
     }
   } catch (err) {
     console.error(err);
@@ -655,13 +788,37 @@ function init() {
 
   // footer: New returns to landing (refresh-like)
   const btnNew = document.getElementById("btn-new");
-  if (btnNew) btnNew.addEventListener("click", () => showScreen("landing"));
+  if (btnNew)
+    btnNew.addEventListener("click", () => {
+      stopTimer();
+      showScreen("landing");
+    });
 
   const btnClear = document.getElementById("btn-clear");
   if (btnClear) btnClear.addEventListener("click", clearActiveWord);
 
   const btnHint = document.getElementById("btn-hint");
   if (btnHint) btnHint.addEventListener("click", useHint);
+
+  // win screen buttons
+  const btnAgain = document.getElementById("btn-again");
+  if (btnAgain) btnAgain.addEventListener("click", () => startGame(state.tier));
+
+  const btnNext = document.getElementById("btn-next");
+  if (btnNext)
+    btnNext.addEventListener("click", () => {
+      const order = ["bitsize", "mega", "giga"];
+      const i = order.indexOf(state.tier);
+      const next = order[Math.min(i + 1, order.length - 1)];
+      startGame(next);
+    });
+
+  const btnHome = document.getElementById("btn-home");
+  if (btnHome)
+    btnHome.addEventListener("click", () => {
+      stopTimer();
+      showScreen("landing");
+    });
 
   // keyboard typing
   document.addEventListener("keydown", onKey);
