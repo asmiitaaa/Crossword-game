@@ -1,0 +1,6 @@
+flask
+gunicorn
+sentence-transformers
+torch
+groq
+python-dotenv
