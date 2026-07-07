@@ -10,8 +10,7 @@ app = Flask(__name__)
 with open("backup_grids.json") as f:
     BACKUPS = json.load(f)
 
-# each tier maps to (grid size, number of black squares)
-TIERS = {"bitsize": (5, 4), "mega": (7, 8), "giga": (10, 24)}
+
 
 # holds the current game state (single-game version)
 game = {}
@@ -24,17 +23,25 @@ def index():
 
 
 # starts a new game: generates a grid + clues, returns them to the browser
+# per-tier generation limits: (grid size, blocks, time_limit_per_attempt, max_attempts)
+TIER_GEN = {
+    "bitsize": (5, 4, 5, 4),    # 5x5: solves instantly, short window
+    "mega":    (7, 8, 5, 5),    # 7x7: usually fast
+    "giga":    (10, 24, 5, 6),  # 10x10: up to 30s (5s x 6), then backup
+}
+
 @app.route("/new_game")
 def new_game():
     tier = request.args.get("tier", "bitsize")
-    n, blocks = TIERS[tier]
+    n, blocks, tlimit, attempts = TIER_GEN[tier]
 
-    # try live generation first; if it times out, use a pre-made backup
-    grid, slots = make_filled_grid(n, blocks, time_limit=30)
+    grid, slots = make_filled_grid(n, blocks, time_limit=tlimit, max_attempts=attempts)
     if grid is None:
         entry = random.choice(BACKUPS[tier])
         grid = entry["grid"]
         slots = entry["slots"]
+
+    # ... rest stays the same (answers, clues, etc.)
 
     # read the answer for each slot from the filled grid
     answers = [get_pattern(grid, s) for s in slots]
@@ -78,9 +85,10 @@ def guess():
 @app.route("/hint")
 def hint():
     idx = int(request.args.get("clue_index"))
+    pos = int(request.args.get("pos", 0))
     answer = game["answers"][idx]
-    import random as _r
-    pos = _r.randrange(len(answer))
+    if pos < 0 or pos >= len(answer):
+        pos = 0
     return jsonify({"pos": pos, "letter": answer[pos]})
 
 if __name__ == "__main__":
