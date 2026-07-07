@@ -49,6 +49,10 @@ Hint: Reveals one letter of the selected word
 7X7 CrossWord 
 <img width="2102" height="1422" alt="image" src="https://github.com/user-attachments/assets/7c11c3cf-8bd3-4054-8b3a-6c9700ced9f5" />
 
+10x10 CrossWord 
+<img width="2292" height="1374" alt="image" src="https://github.com/user-attachments/assets/23e5cfa1-7ece-4e6a-97a7-58ca63ee9507" />
+
+
 Credits
 App icon by cube29 from Flaticon
 Color palette: "Deepsea" from Paleto (CC0)
